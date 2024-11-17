@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>OSM Object Viewer</title>
+    <meta charset="utf-8">
+    <script src="https://cdn.jsdelivr.net/npm/brython@3/brython.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/brython@3/brython_stdlib.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maptalks/dist/maptalks.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/maptalks/dist/maptalks.min.js"></script>
+    <style>
+        html, body, div, span {
+            margin: 0px;
+        }
+        #site {
+            height: 100vh;
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+        }
+        #map {
+            flex: 1;
+        }
+        #form {
+            display: flex;
+            flex-direction: row;
+            margin: 5px;
+        }
+        .app p, .app input, .app button, .app label {
+            font-family: Arial, sans-serif;
+            font-size: 20px;
+            color: black;
+            line-height: normal;
+            text-decoration: none;
+            font-weight: normal;
+            margin: 5px;
+            padding: 5px 7px;
+            display: block;
+        }
+        .app input, .app button {
+            border-radius: 0px;
+            background-color: #f8f8f8;
+            -webkit-appearance: none;
+            border: 1px solid gray;
+        }
+        .app input[type="radio"]:checked + label {
+            background-color: lightcoral;
+        }
+        .app ::placeholder {
+            color: gray;
+            opacity: 1;
+        }
+        .app ::-ms-input-placeholder {
+            color: gray;
+        }
+        .app input[type="radio"] {
+            width: 0px;
+            height: 0px;
+            border: 0px;
+            margin: 0px;
+            padding: 0px;
+        }
+        #search {
+            flex: 1;
+        }
+        h2 {
+            font-family: Arial, sans-serif;
+            font-size: 28px;
+            text-decoration: none;
+            font-weight: normal;
+            margin: 20px;
+        }
+        h1 {
+            font-family: Arial, sans-serif;
+            font-size: 36px;
+            font-weight: bold;
+            margin: 0px 20px 20px;
+        }
+    </style>
+</head>
+<body onload="brython (0)">
+    <noscript>
+        <p>JavaScript is required to use this website.</p>
+    </noscript>
+    <div id="site">
+        <form action="javascript:void(0)" id="form" class="app">
+            <input type="text" id="search" placeholder="Enter an OSM object ID (leave blank to search current map view)">
+            <input type="radio" name="obj_type" id="node" value="node" checked>
+            <label for="node">Node</label>
+            <input type="radio" name="obj_type" id="way" value="way">
+            <label for="way">Way</label>
+            <input type="radio" name="obj_type" id="relation" value="relation">
+            <label for="relation">Relation</label>
+            <button type="submit" id="submit">Search</button>
+        </form>
+        <div id="map"></div>
+    </div>
+    <script type = "text/python">
+        from browser import document, ajax, html, window, timer
+
+        global mt
+        mt = window.maptalks
+
+        Map = mt.Map.new ("map", {
+            "center": [0, 0],
+            "maxExtent": mt.Extent.new ([-180, -90, 180, 90]),
+            "zoom": 2,
+            "maxZoom": 19,
+            "seamlessZoom": True,
+            "attribution": {
+                "content": "&copy; <a href = 'https://esri.com'>esri</a> | <a href='https://carto.com/'>CARTO</a> | <a href = 'https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors"
+            },
+            "layerSwitcherControl": {
+                "position": "top-right",
+                "baseTitle": "Base Layers",
+                "overlayTitle": "Layers",
+                "excludeLayers": [],
+            },
+            "baseLayer": mt.GroupTileLayer.new ("Base", [
+                mt.TileLayer.new ("OSM Standard", {
+                    "urlTemplate": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                    "maxZoom": 19
+                }),
+                mt.TileLayer.new ("ESRI Satellite", {
+                    "visible": False,
+                    "urlTemplate": "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+                    "maxZoom": 19
+                }),
+                mt.TileLayer.new ("Carto Light", {
+                    "visible": False,
+                    "urlTemplate": "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
+                    "subdomains": ["a", "b", "c", "d"],
+                    "maxZoom": 22
+                }),
+                mt.TileLayer.new ("Carto Dark", {
+                    "visible": False,
+                    "urlTemplate": "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
+                    "subdomains": ["a", "b", "c", "d"],
+                    "maxZoom": 22
+                }),
+                mt.TileLayer.new ("Carto Voyager", {
+                    "visible": False,
+                    "urlTemplate": "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png",
+                    "subdomains": ["a", "b", "c", "d"],
+                    "maxZoom": 22
+                })
+            ]),
+            "layers": [mt.VectorLayer.new ("Objects", None)]
+        })
+
+        def show_coords (ev):
+            global mt
+            if hasattr (ev, "coordinate"):
+                pass #document ["coordinates"].text = f"Coordinates: {mt.Coordinate.toNumberArrays (ev.coordinate)}"
+            else:
+                return
+        Map.bind ("mousemove", show_coords)
+
+        def interactive (toggle):
+            Map.setOptions ({
+                "draggable": toggle,
+                "dragPan": toggle,
+                "dragRotate": toggle,
+                "dragPitch": toggle,
+                "scrollWheelZoom": toggle,
+                "touchZoom": toggle,
+                "doubleClickZoom": toggle
+            })
+        
+    </script>
+</body>
+</html>
